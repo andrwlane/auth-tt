@@ -8,17 +8,38 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var authManager: AuthManager
+    @StateObject var reachability = NetworkReachabilty.shared
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if reachability.isNetworkConnected {
+            Group {
+                if authManager.currentUser != nil,
+                    authManager.authOperationsCompleted {
+                    WelcomeView(vm: WelcomeViewModel(
+                        authManager: authManager
+                    ))
+                } else {
+                    NavigationStack {
+                        SignInView(vm: SignInViewModel(
+                            authManager: authManager
+                        ))
+                    }
+                }
+            }
+            .environmentObject(authManager)
+        } else {
+            VStack(spacing: 24) {
+                Image(systemName: "wifi.slash")
+                    .resizable()
+                    .frame(width: 50, height: 50, alignment: .center)
+                Text("Network not available")
+            }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AuthManager())
 }
